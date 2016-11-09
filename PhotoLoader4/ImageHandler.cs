@@ -56,7 +56,14 @@ namespace PhotoLoader4
             File.Copy(oldPath, newPath);
          }
 
-         RotateImages(newPath);
+          try
+          {
+              RotateImages(newPath);
+          }
+          catch (Exception)
+          {
+              // Must not have been an image
+          }
       }
 
       private static void RotateImages(string destination)

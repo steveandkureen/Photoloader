@@ -103,7 +103,7 @@ namespace PhotoLoader4
 
             SetStatusText("Getting image list.");
 
-            var fileExentions = new List<string> { "*.JPG", "*.PNG", "*.BMP" };
+            var fileExentions = new List<string> { "*.JPG", "*.PNG", "*.BMP", "*.MOV", "*.MP4" };
             var imagePaths = new List<PhotoInfo>();
             foreach (var fileExention in fileExentions)
             {
