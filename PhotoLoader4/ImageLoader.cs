@@ -6,12 +6,15 @@ using PhotoServerTools;
 using SmugMugWrapper;
 using System.Linq;
 using System.Xml.Serialization;
+using NLog;
 using SmugMugWrapper.V2;
 
 namespace PhotoLoader4
 {
     public class ImageLoader
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+
         public List<PhotoInfo> ImagePaths { get; set; }
         public CancellationToken CancellationToken { get; set; }
 
@@ -123,18 +126,21 @@ namespace PhotoLoader4
                     var year = smugApi.FindYear(imageYear);
                     if (year == null)
                     {
+                        logger.Info($"Creating year node: {imageYear}");
                         year = smugApi.AddNode(rootNode, new NewNode {Name = imageYear, Type = "Folder"});
                     }
 
                     var month = smugApi.FindMonth(year, imageMonth);
                     if (month == null)
                     {
+                        logger.Info($"Creating month node: {imageMonth}");
                         month = smugApi.AddNode(year, new NewNode {Name = imageMonth, Type = "Folder"});
                     }
 
                     var day = smugApi.FindDay(month, imageAlbumName);
                     if (day == null)
                     {
+                        logger.Info($"Creating day node: {imageAlbumName}");
                         day = smugApi.AddNode(month, new NewNode {Name = imageAlbumName, Type = "Album"});
                     }
 

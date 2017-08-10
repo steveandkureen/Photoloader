@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Linq;
+using NLog;
 using PhotoServerTools;
 
 namespace PhotoLoader4
@@ -15,6 +16,8 @@ namespace PhotoLoader4
     /// </summary>
     public partial class MainWindow
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+
         PhotoLoaderSettings Settings { get; set; }
         private ImageLoader imageLoader;
         Task mainTask;
@@ -31,10 +34,12 @@ namespace PhotoLoader4
         {
             InitializeComponent();
             sourceFolder = "";
+            logger.Info("Starting application");
         }
 
         void LoadSettings()
         {
+            logger.Info("Load Settings");
             imageListFilePath = Path.Combine(App.Current.ApplicationDataFolder, "ImageList.txt");
             errorFilePath = Path.Combine(App.Current.ApplicationDataFolder, "Error.txt");
             settingsFile = Path.Combine(App.Current.ApplicationDataFolder, "PhotoLoaderSettings.xml");
@@ -76,6 +81,7 @@ namespace PhotoLoader4
 
         private void StartButtonClick(object sender, RoutedEventArgs e)
         {
+            logger.Info("Start Loading Photos.");
             foreach (var folder in Settings.SourcePaths.Split(';'))
             {
                 if (Directory.Exists(folder))
@@ -102,6 +108,7 @@ namespace PhotoLoader4
             StartButton.IsEnabled = false;
 
             SetStatusText("Getting image list.");
+            
 
             var fileExentions = new List<string> { "*.JPG", "*.PNG", "*.BMP", "*.MOV", "*.MP4" };
             var imagePaths = new List<PhotoInfo>();
@@ -237,6 +244,7 @@ namespace PhotoLoader4
                 image.IsError = true;
                 image.Error = evt.PhotoInfo.Error;
                 errorOccured = true;
+                logger.Error(evt.PhotoInfo.Error, $"Error uploading image: {evt.PhotoInfo.Error.Message}");
             }
 
             if (!imageLoader.CancellationToken.IsCancellationRequested)
@@ -297,6 +305,8 @@ namespace PhotoLoader4
 
         private void SetStatusText(string text)
         {
+            logger.Info(text);
+
             if ((cancellationTokenSource != null) && (cancellationTokenSource.Token.IsCancellationRequested))
                 text = "Cancelling";
 
@@ -315,6 +325,7 @@ namespace PhotoLoader4
 
         void RestartUpload()
         {
+            logger.Info("Restarting image upload from failed attempt.");
             StartButton.IsEnabled = false;
             var destPaths = new List<PhotoInfo>();
             using (var reader = File.OpenText(imageListFilePath))

@@ -91,5 +91,7 @@ namespace SmugMugWrapperTest
             //var testNode = api.AddNode(api.RootNode, new NewNode() {Name = "Image Add Test Node", Type = "Album"});
             api.UploadImage(@"C:\Users\sschwarz\Pictures\Aiden.jpg", testNode);
         }
+
+        
     }
 }

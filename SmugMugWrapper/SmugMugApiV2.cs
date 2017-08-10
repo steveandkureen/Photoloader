@@ -11,6 +11,7 @@ using DotNetOpenAuth.OAuth;
 using DotNetOpenAuth.OAuth.ChannelElements;
 using DotNetOpenAuth.OAuth.Messages;
 using Newtonsoft.Json;
+using NLog;
 using SmugMugWrapper.V2;
 
 namespace SmugMugWrapper
@@ -70,7 +71,7 @@ namespace SmugMugWrapper
 
     public class SmugMugApiV2 
     {
-       
+        private static Logger logger = LogManager.GetCurrentClassLogger();
 
         private OAuthToken oAuthToken;
         private static string ChildNodeSuffix = "!children?count=1000";
@@ -181,6 +182,7 @@ namespace SmugMugWrapper
 
         private void LoadChildNodes(TreeNode parent)
         {
+            // check to see if children are already loaded
             if (parent.Children.Count != 0)
                 return;
 
@@ -188,6 +190,10 @@ namespace SmugMugWrapper
             response.EnsureSuccessStatusCode();
             var responseString = response.Content.ReadAsStringAsync().Result;
             var result = JsonConvert.DeserializeObject<RootObject>(responseString);
+
+            // no children
+            if (result.Response.Node == null)
+                return;
 
             foreach (var node in result.Response.Node)
             {
@@ -215,7 +221,7 @@ namespace SmugMugWrapper
 
         #endregion
 
-#region Made Nodes
+#region Make Nodes
 
         public TreeNode AddNode(TreeNode parent, NewNode newNode)
         {
@@ -250,6 +256,8 @@ namespace SmugMugWrapper
 
         public void UploadImage(string imagePath, TreeNode album)
         {
+            logger.Info($"Uploading Image: {imagePath} to album: {album.Name}");
+
             var byteArr = File.ReadAllBytes(imagePath);
             var md5Sum = GetStringFromHash(System.Security.Cryptography.MD5.Create().ComputeHash(byteArr));
 
@@ -277,9 +285,10 @@ namespace SmugMugWrapper
                     content.Headers.ContentLength = fileInfo.Length;
                     using (var response = client.PostAsync(url, content).Result)
                     {
-                        if (response.StatusCode != HttpStatusCode.OK)
+                        if (!response.IsSuccessStatusCode)
                         {
-                            throw new ApplicationException("Image filed to upload");
+                            var contentString = response.Content.ReadAsStringAsync().Result;
+                            throw new ApplicationException($"Image filed to upload with code: {response.StatusCode} {response.ReasonPhrase} \n\t\t {contentString}");
                         }
                         else
                         {
